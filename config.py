@@ -28,9 +28,9 @@ class Configuration:
     ALIGNMENT = 'N'
 
     # which reduction step would you like to start at?
-    CLEAN_SKIP = 'Y'
-    MASTER_SKIP = 'Y'
-    DIFFERENCE_SKIP = 'Y'
+    CLEAN_SKIP = 'N'
+    MASTER_SKIP = 'N'
+    DIFFERENCE_SKIP = 'N'
     PHOTOMETRY_SKIP = 'N'
     MAKE_RAW_LIGHTCURVE_SKIP = 'N'
     MAKE_DETREND_LIGHTCURVE_SKIP = 'N'
