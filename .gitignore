@@ -1,0 +1,8 @@
+# ignore everything in this file
+/analysis/*
+*.fits
+/data/*
+/legacy/*
+scratch.py
+tester.py
+/curves/*

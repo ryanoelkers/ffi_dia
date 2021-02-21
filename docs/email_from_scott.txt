@@ -1,0 +1,43 @@
+For your questions:
+
+1.)  In terms of the TASOC header example, there are some things there we asked they add that we use to populate things like the Portal and would need to have in the header from the FFIs, those would be:
+
+DATE-OBS (should be observation of start of first FFI frame, in the "ISOT" format YYYY-MM-DDTHH:MM:SS.sss), so example: '2018-07-25T19:37:20.208'
+
+MJD-BEG and MJD-END, which are the start of the first frame, and end of the last frame, in regular MJD format
+
+XPOSURE which is the duration of each FFI frame in seconds.  The TASOC team did a full calculation, but for ingest we just hard-code it at 1800 sec. for FFI cadence, so so you can either set it to 1800. or do a more careful calculation.
+
+The other things are all optional.  The one I do suggest is, if the timestamps in your light curve file are in "TESS truncated JD" that you include the "BJDREFF" and "BJDREFI" keywords.
+
+2.)  For the TIC data columns, if you are adding then as keyword - value pairs in the header, it would be OK to just put in the COMMENT part of the keyword something like: "VMAG from TIC v8" or something (so just specify the column name in the TIC and which version as a comment, and can rely on TIC documentation elsewhere for full information).  The only exception would be if you make any changes to what's in the catalog of course.
+
+Some further requested changes:
+
+1.) The file name has "filt-imbsub" but I think it should be "filtg-imsub" (short for "filtergraph imsub").
+
+2.) If possible, could you add these to the primary header (using TIC 115175383 as an example ID, and a specific value for things like Camera, Sector, CCD etc., strings denoted with quotes, otherwise should be int or float values as appropriate):
+
+TELESCOP= 'TESS'
+INSTRUME= 'TESS Photometer'
+FILTER  = 'TESS    '
+OBJECT  = 'TIC 115175383'
+TICID   =            115175383
+CAMERA  =                    1
+CCD     =                    1
+SECTOR  =                    1
+RADESYS = 'ICRS    '
+EQUINOX =               2000.0
+RA_OBJ  =           317.100797
+DEC_OBJ =           -41.767285
+
+3.)  I suggest adding a keyword called TICVER that specifies whether the TIC values come from 7 or 8, as an integer.
+
+4.)  Running FITS verification, I think the columns that are set to TDISP = D9.6, D8.6, etc. should all be F9.6, F8.6, etc.  See https://nam04.safelinks.protection.outlook.com/?url=https%3A%2F%2Fheasarc.gsfc.nasa.gov%2Fftools%2Ffv%2Fdoc%2FdisplayFormat.html&amp;data=02%7C01%7Cryan.j.oelkers%40vanderbilt.edu%7C3fe2cc89699a48bef9c908d6ede3bfae%7Cba5a7f39e3be4ab3b45067fa80faecad%7C0%7C0%7C636957959766190293&amp;sdata=H0qRnr%2BTKwpTdlXv%2FjV8CvZrpvCaujAR6m4pr0Q2W5U%3D&amp;reserved=0 for reference.  If using D, that is double precision and requires scientific notation, I'm pretty sure you just want float precision and should use F format codes there.  This would impact TDISP2,3,4,5,6,7.
+
+5.)  For standard columns in binary FITS tables, I don't think you need the TDIM keywords, so I would suggest removing them all (they aren't formatted correctly as they are, verification doesn't like the current values).
+
+6.)  In the first and second HDU extensions, could you add EXTNAME keywords that contain some sort of name for the extensions?  I think TASOC used "EXTNAME = 'LIGHTCURVE' for the extension with their times and fluxes, and you could add an EXTNAME = 'CATALOGVALS' or something for the catalog stuff?
+
+After these changes we should be good to go!  Let me know if you have any questions about any of the feedback.
+
