@@ -7,7 +7,7 @@ class Configuration:
     STAR_CHECK = -1  # this is the number of stars to run photometry on the frame SET TO -1 UNLESS DEBUGGING
 
     # Computer for reduction
-    MACHINE = 'oelkers'
+    MACHINE = 'tessdev'
     BULK_QUERY = 1000
 
     # Sector, Camera, CCD information
