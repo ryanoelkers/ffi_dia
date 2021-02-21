@@ -6,3 +6,5 @@
 scratch.py
 tester.py
 /curves/*
+.idea/*
+*.pyc
