@@ -33,8 +33,8 @@ class Photometry:
         """
         # make a copy of the master data frame
         if stars_to_phot == -1:
-            star_list = master_list.copy().reset_index(drop=True)
-
+            star_list = pd.merge(master_list, master_list[['TICID', 'mag', 'flux', 'flux_err']],
+                                 on='TICID', how='left', suffixes=['', '_master'])
         else:
             stars_for_phot = master_list[0:stars_to_phot].copy().reset_index(drop=True)
             star_list = pd.merge(stars_for_phot, master_list[['TICID', 'mag', 'flux', 'flux_err']],
