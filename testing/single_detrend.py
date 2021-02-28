@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 
 # set this flag to 1 if you want to experiment with the new SPEARMAN RANK method
-EXPERIMENT = 1
+EXPERIMENT = 0
 
 # change this for the sector camera ccd you are looking for
 SECTOR = 'sector01'
@@ -17,7 +17,7 @@ CCD = '1'
 
 # these can be updated for whatever you want
 TREND_STARS = 500
-MG_CLIP = 9
+MG_CLIP = 13
 
 # change these for the specific directories
 SECTOR_DIRECTORY = '/net/jovan/export/jovan/oelkerrj/FFI/'
