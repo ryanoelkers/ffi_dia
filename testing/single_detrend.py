@@ -17,7 +17,7 @@ CCD = '1'
 
 # these can be updated for whatever you want
 TREND_STARS = 500
-MG_CLIP = 13
+MG_CLIP = 9
 
 # change these for the specific directories
 SECTOR_DIRECTORY = '/net/jovan/export/jovan/oelkerrj/FFI/'
@@ -38,10 +38,10 @@ zpt_mags = master[master['tessmag'] < MG_CLIP]['mag'].to_numpy()
 filenames = [RAW_DIRECTORY + str(x) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc" for x in zpt_ticid]
 
 # read in the raw lightcurves to find the zeropoint
-lc_data = np.array([np.loadtxt(f, usecols=(1,)) for f in filenames])
+lc_data = np.array([np.genfromtxt(f, delimiter=' ')[:, 1] for f in filenames])
 
 # subtract the master frame magnitude, and then median combine to determine the zeropoint trend
-median_df = pd.DataFrame(lc_data - zpt_mags.reshape(-1, 1))
+median_df = pd.DataFrame(lc_data).replace('*********', 99.999999) - zpt_mags.reshape(-1, 1)
 zpt_offset = median_df.median(axis=0)
 
 if EXPERIMENT == 1:
@@ -53,7 +53,7 @@ iter_num = 0
 for idx, tic in enumerate(ticid):
     # read in the raw light curve
     lc = pd.read_csv(RAW_DIRECTORY + str(tic) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc",
-                     names=['JD', 'mag', 'err'], sep=" ")
+                     names=['JD', 'mag', 'err'], sep=" ", na_values='*********')
 
     # this is the current version of 'clean' in the pipeline
     lc['clean'] = lc['mag'] - zpt_offset
@@ -107,8 +107,9 @@ for idx, tic in enumerate(ticid):
             # get the light curves for the initial number of light curves
             fname_hold = [RAW_DIRECTORY + str(x) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc"
                           for x in ticid[lw_bnd:up_bnd]]
-            raw_hold = np.array([np.loadtxt(f, usecols=(2,)) for f in filenames])
-            median_hold = pd.DataFrame(raw_hold - np.median(raw_hold, axis=1).reshape(-1, 1))
+            raw_hold = np.array([np.genfromtxt(f, delimiter=' ')[:, 1] for f in filenames])
+            median_hold = pd.DataFrame(raw_hold).replace('*********', 99.999999) - \
+                          np.median(raw_hold, axis=1).reshape(-1, 1)
 
             # add the next 100 stars, clip the top 100 and reorganize the data frame
             exp_df = exp_df.append(median_hold)
