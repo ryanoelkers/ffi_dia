@@ -34,7 +34,10 @@ class Photometry:
         """
         # make a copy of the master data frame
         if stars_to_phot == -1:
-            stars_for_phot = master_list.copy().reset_index(drop=True)
+            if master_frame == 'N':
+                stars_for_phot = master_list.copy().reset_index(drop=True)
+            else:
+                star_list = master_list.copy().reset_index(drop=True)
         else:
             stars_for_phot = master_list[0:stars_to_phot].copy().reset_index(drop=True)
 
