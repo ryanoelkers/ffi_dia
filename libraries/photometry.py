@@ -16,7 +16,7 @@ class Photometry:
 
     @staticmethod
     def single_frame_aper(img, master_list, header, stars_to_phot=-1, flux_only='N',
-                          bkg_sub='global', offset='N', diff_flux_convert='N'):
+                          bkg_sub='global', offset='N', diff_flux_convert='N', master_frame='N'):
         """" This function will perform aperture photometry on a single frame.
 
         :parameter img - The image where photometry will be performed
@@ -28,6 +28,7 @@ class Photometry:
                 the median image background, or if the frame is from a differenced image
         :parameter offset - Y/N if you want to add an offset based on the master list flux values
         :parameter diff_flux_convert - Y/N if you want to convert the differenced flux to magnitude
+        :parameter master_frame - Y/N if the image you are differencing is the master frame
 
         :return star_list - The star_list data frame is returned with the flux/mag values and errors included
         """
@@ -37,8 +38,9 @@ class Photometry:
         else:
             stars_for_phot = master_list[0:stars_to_phot].copy().reset_index(drop=True)
 
-        star_list = pd.merge(stars_for_phot, master_list[['TICID', 'mag', 'flux', 'flux_err']],
-                             on='TICID', how='left', suffixes=['', '_master'])
+        if master_frame == 'N':
+            star_list = pd.merge(stars_for_phot, master_list[['TICID', 'mag', 'flux', 'flux_err']],
+                                 on='TICID', how='left', suffixes=['', '_master'])
 
         # convert the ra & dec positions to x & y positions based on the image header
         w = WCS(header)

@@ -240,7 +240,7 @@ class Master:
             Utils.log("Running photometry on master frame.", "info", 'Y')
 
             # now we run photometry on the master frame
-            phot_df = Photometry.single_frame_aper(master, tic_list, mast_head)
+            phot_df = Photometry.single_frame_aper(master, tic_list, mast_head, master_frame='Y')
 
             # remove the unseen stars
             phot_df = phot_df.dropna()
