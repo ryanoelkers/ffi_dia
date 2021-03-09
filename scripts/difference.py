@@ -196,5 +196,8 @@ class BigDiff:
         diff_list[['x', 'y']].astype(int).to_csv(Configuration.CODE_DIFFERENCE_DIRECTORY +
                                                  'refstars.txt', index=0, header=0, sep=" ")
         diff_list[['TICID', 'x', 'y']].to_csv(Configuration.MASTER_DIRECTORY +
-                                              'kernel_stars.txt', index=0, header=0, sep=" ")
+                                              Configuration.SECTOR + "_" +
+                                              Configuration.CAMERA + "_" +
+                                              Configuration.CCD +
+                                              "_kernel_stars.txt", index=0, header=0, sep=" ")
         return

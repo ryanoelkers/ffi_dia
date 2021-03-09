@@ -134,15 +134,26 @@ class Master:
             for idx, file in enumerate(file_list):
 
                 if fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['DQUALITY'] == 0:
-                    # add the data to a data frame which will be returned for analysis
-                    img_chk = img_chk.append(pd.DataFrame(
-                        data={'file': [file],
-                              'JD': [np.mean([fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['TSTART'],
-                                             fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['TSTOP']])],
-                              'ra': [fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['CRVAL1']],
-                              'dec': [fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['CRVAL2']],
-                              'pass': [fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['DQUALITY']]})
-                    ).reset_index(drop=True)
+                    # sometimes the quality flag does not catch the issue
+                    try:
+                        # add the data to a data frame which will be returned for analysis
+                        img_chk = img_chk.append(pd.DataFrame(
+                            data={'file': [file],
+                                  'JD': [np.mean([fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['TSTART'],
+                                                 fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['TSTOP']])],
+                                  'ra': [fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['CRVAL1']],
+                                  'dec': [fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['CRVAL2']],
+                                  'pass': [fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['DQUALITY']]})
+                        ).reset_index(drop=True)
+                    except KeyError:
+                        img_chk = img_chk.append(pd.DataFrame(
+                            data={'file': [file],
+                                  'JD': [np.mean([fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['TSTART'],
+                                                  fits.getheader(Configuration.RAW_DIRECTORY + file, 1)['TSTOP']])],
+                                  'ra': -99,
+                                  'dec': -99,
+                                  'pass': 99})
+                        ).reset_index(drop=True)
                 else:
                     # add the data to a data frame which will be returned for analysis
                     img_chk = img_chk.append(pd.DataFrame(
