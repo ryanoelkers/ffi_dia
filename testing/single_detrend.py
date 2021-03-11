@@ -89,9 +89,11 @@ for idx, tic in enumerate(ticid):
 
     if METHOD == 'SPEARMAN':
         # read in the raw light curve
+        # lc = pd.read_csv(RAW_DIRECTORY + str(tic) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc",
+        #                 names=['JD', 'raw', 'err'], sep=" ", na_values='*********', usecols=[0, 2, 3])
         lc = pd.read_csv(RAW_DIRECTORY + str(tic) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc",
-                         names=['JD', 'raw', 'err'], sep=" ", na_values='*********', usecols=[0, 2, 3])
-
+                         names=['JD', 'raw', 'err'], sep=" ", na_values='*********')
+        
         # get the light curve offset from median
         spear_lc = lc['raw'] - lc['raw'].median()
 
