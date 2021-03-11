@@ -70,7 +70,7 @@ for idx, tic in enumerate(ticid):
 
     if METHOD == 'ZEROPOINT':
         # read in the raw light curve
-        lc = pd.read_csv(RAW_DIRECTORY + str(tic) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc",
+        lc = pd.read_csv(DETREND_DIRECTORY + str(tic) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc",
                          names=['JD', 'detrend', 'raw', 'err'], sep=" ", na_values='*********')
 
         # this is the current version of 'clean' in the pipeline
