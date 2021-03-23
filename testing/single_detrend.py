@@ -44,7 +44,7 @@ zpt_mags = master[master['tessmag'] < MG_CLIP]['mag'].to_numpy()
 # set up the light curve vectors based on the method you are using
 if METHOD == 'SPEARMAN':
     # read in the necessary light curves
-    filenames = [RAW_DIRECTORY + str(x) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc" for x in zpt_ticid]
+    filenames = [RAW_DIRECTORY + str(x) + "_" + SECTOR + "_" + CAMERA + "_" + CCD + ".lc" for x in ticid]
 
     # read in the raw lightcurves to find the zeropoint
     # lc_data = np.array([np.genfromtxt(f, delimiter=' ')[:, 2] for f in filenames[0:TREND_STARS]])
