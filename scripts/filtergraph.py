@@ -30,7 +30,7 @@ class Filtergraph:
         Filtergraph.get_varstats(filtergraph_list)
 
         # make the figures for the light curves
-        # Filtergraph.plot_lightcurves(filtergraph_list)
+        Filtergraph.plot_lightcurves(filtergraph_list)
 
         # make the filtergraph file from the relevant TIC
         Filtergraph.pull_filtergraph_portal(filtergraph_list)
