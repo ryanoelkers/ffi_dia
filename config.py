@@ -28,17 +28,17 @@ class Configuration:
     ALIGNMENT = 'N'
 
     # which reduction step would you like to start at?
-    CLEAN_SKIP = 'N'
-    MASTER_SKIP = 'N'
-    DIFFERENCE_SKIP = 'N'
-    PHOTOMETRY_SKIP = 'N'
+    CLEAN_SKIP = 'Y'
+    MASTER_SKIP = 'Y'
+    DIFFERENCE_SKIP = 'Y'
+    PHOTOMETRY_SKIP = 'Y'
     MAKE_RAW_LIGHTCURVE_SKIP = 'N'
-    MAKE_DETREND_LIGHTCURVE_SKIP = 'N'
-    SKIP_MAKE_FILTERGRAPH_PORTAL = 'N'
+    MAKE_DETREND_LIGHTCURVE_SKIP = 'Y'
+    MAKE_FILTERGRAPH_PORTAL_SKIP = 'N'
     MAST_RELEASE_SKIP = 'N'
 
     # what type of master frame would you like (single or multi)
-    MASTER_TYPE = 'multi'
+    MASTER_TYPE = 'single'
 
     # update image specific information (i.e. axis size - for TESS ~2048x2048)
     AXS = 2048

@@ -3,6 +3,7 @@ plots, variable stats, csv files etc."""
 from libraries.utils import Utils
 from libraries.dbaccess import DBaccess
 from config import Configuration
+from scripts.lightcurves import LightCurves
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,34 +15,38 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 class Filtergraph:
 
     @staticmethod
-    def make_filtergraph_table(detrend_list):
+    def make_filtergraph_table(star_list):
         """ This program makes the final release files and filtergraph table for upload.
 
-        :parameter detrend_list - The list of stars which have gone through the cleaning process
+        :parameter star_list - The list of stars to determine the filtergraph portal for
 
         :return nothing is returned, but the filtergraph table, figures, and variability statistics are finalized
         """
 
+        # get the stars 'worth' de-trending
+        filtergraph_list = LightCurves.get_filtergraph_stars(star_list)
+
         # get the varstats for the light curves
-        Filtergraph.get_varstats(detrend_list)
+        Filtergraph.get_varstats(filtergraph_list)
 
         # make the figures for the light curves
-        Filtergraph.plot_lightcurves(detrend_list)
+        # Filtergraph.plot_lightcurves(filtergraph_list)
 
         # make the filtergraph file from the relevant TIC
-        Filtergraph.pull_filtergraph_portal(detrend_list)
+        Filtergraph.pull_filtergraph_portal(filtergraph_list)
 
         # combine all of the files to make one large file
-        Filtergraph.make_filtergraph_file(detrend_list)
+        Filtergraph.make_filtergraph_file(filtergraph_list)
 
         return
 
     @staticmethod
-    def make_filtergraph_file(detrend_list):
-        """ This function will combine the varstats, detrend_list, and TIC file to make a file to upload to filtergraph.
-        This file needs to be combined will all other files in order to upload to filtergraph appropriately.
+    def make_filtergraph_file(filtergraph_list):
+        """ This function will combine the varstats, filtergraph_list, and TIC file to make a file to
+        upload to filtergraph. This file needs to be combined will all other files in order to upload to
+        filtergraph appropriately.
 
-        :parameter detrend_list - The list of stars which were detrended, and have filtergraph information.
+        :parameter filtergraph_list - The list of stars which were detrended, and have filtergraph information.
 
         :return No parameter is returned, however the final file is combined appropriately.
         """
@@ -64,8 +69,8 @@ class Filtergraph:
         tic = pd.read_csv(Configuration.RELEASE_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
                           Configuration.CAMERA + "_" + Configuration.CCD + "_tic7_data.csv", delimiter=',', index_col=0)
 
-        # combine with detrend_list
-        full_tmp = pd.merge(detrend_list, tic, left_on='TICID', right_on='ticid')
+        # combine with filtergraph_list
+        full_tmp = pd.merge(filtergraph_list, tic, left_on='TICID', right_on='ticid')
         full = pd.merge(full_tmp, varstats, on='ticid')
         full = full.drop(columns=['#Name', 'pk', 'ticlinkpk', 'ticid', 'twomass_extkey',
                                   'sdss_extkey', 'kic', 'rpmjdwarf', 'tmpk'])
@@ -97,10 +102,10 @@ class Filtergraph:
         return
 
     @staticmethod
-    def pull_filtergraph_portal(detrend_list):
+    def pull_filtergraph_portal(filtergraph_list):
         """ This function will query the necessary TIC for the release information.
 
-        :parameter detrend_list - The list of stars which need tic information
+        :parameter filtergraph_list - The list of stars which need tic information
 
         :return No value is returned, however the TIC file is dumped
         """
@@ -108,15 +113,15 @@ class Filtergraph:
         if os.path.exists(Configuration.RELEASE_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
                           Configuration.CAMERA + "_" + Configuration.CCD + "_tic7_data.csv") is False:
 
-            for idx in range(0, len(detrend_list), Configuration.BULK_QUERY):
+            for idx in range(0, len(filtergraph_list), Configuration.BULK_QUERY):
 
                 # create the appropriate index values
                 idy = idx + Configuration.BULK_QUERY
-                if idy > len(detrend_list):
-                    idy = len(detrend_list) - 1
+                if idy > len(filtergraph_list):
+                    idy = len(filtergraph_list)
 
                 # pull the specific TICIDs to query
-                tics = detrend_list['TICID'].iloc[idx:idy].astype(str).tolist()
+                tics = filtergraph_list['TICID'].iloc[idx:idy].astype(str).tolist()
 
                 # create the correct SQL command
                 sql_cmd = DBaccess.get_ticid_query(Configuration.QUERIES_DIRECTORY + 'filtergraph.sql', tics)
@@ -130,9 +135,9 @@ class Filtergraph:
                 else:
                     df = df.append(df_query).reset_index(drop=True)
 
-                # dump the file to csv
-                df.to_csv(Configuration.RELEASE_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
-                          Configuration.CAMERA + "_" + Configuration.CCD + "_tic7_data.csv")
+            # dump the file to csv
+            df.to_csv(Configuration.RELEASE_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
+                      Configuration.CAMERA + "_" + Configuration.CCD + "_tic7_data.csv")
         else:
             Utils.log("TIC file found for sector: " + Configuration.SECTOR + " camera: " + Configuration.CAMERA +
                       " ccd: " + Configuration.CCD + " skipping for now.", "info", Configuration.LOG_SCREEN)
@@ -140,10 +145,10 @@ class Filtergraph:
         return
 
     @staticmethod
-    def plot_lightcurves(detrend_list):
+    def plot_lightcurves(filtergraph_list):
         """ This function will plot each light curve for release.
 
-        :parameter detrend_list - The list of stars which have been de-trended
+        :parameter filtergraph_list - The list of stars which will be posted to filtergraph
 
         :return Nothing is returned, however all of the stars will have their light curves plotted.
         """
@@ -151,45 +156,47 @@ class Filtergraph:
         Utils.log("Now plotting light curves for sector: " + Configuration.SECTOR + " camera: " +
                   Configuration.CAMERA + " ccd: " + Configuration.CCD, "info", Configuration.LOG_SCREEN)
 
-        for idx, tic in enumerate(detrend_list['TICID']):
+        for idx, tic in enumerate(filtergraph_list['TICID']):
             # simplify the filename for easy debugging
             nme = str(tic) + "_" + Configuration.SECTOR + "_" + Configuration.CAMERA + "_" + Configuration.CCD + ".png"
 
             # check to make sure the light curve isn't already plotted
-            if os.path.exists(Configuration.PLOTS_SECTOR_DIRECTORY + nme) is False:
+            if os.path.isfile(Configuration.PLOTS_SECTOR_DIRECTORY + nme) is False:
 
-                # read in the specific light curve
-                lc = pd.read_csv(Configuration.DETREND_LC_DIRECTORY + str(tic) + "_" + Configuration.SECTOR + "_" +
-                                 Configuration.CAMERA + "_" + Configuration.CCD + ".lc", sep=" ",
-                                 names=['JD', 'mag', 'mag_err'])
+                if os.path.isfile(Configuration.RAW_LC_DIRECTORY + str(tic) + "_" + Configuration.SECTOR + "_" +
+                                  Configuration.CAMERA + "_" + Configuration.CCD + ".lc"):
+                    # read in the specific light curve
+                    lc = pd.read_csv(Configuration.RAW_LC_DIRECTORY + str(tic) + "_" + Configuration.SECTOR + "_" +
+                                     Configuration.CAMERA + "_" + Configuration.CCD + ".lc", sep=" ",
+                                     names=['JD', 'clean', 'mag', 'mag_err'])
 
-                # set the figure size
-                fig = plt.figure(figsize=(10, 10))
+                    # set the figure size
+                    fig = plt.figure(figsize=(10, 10))
 
-                # make a scatter plot
-                plt.scatter(lc.JD, lc.mag, marker='.', c='k')
+                    # make a scatter plot
+                    plt.scatter(lc.JD, lc.clean, marker='.', c='k')
 
-                # set the labels
-                plt.xlabel('JD [days]', fontsize=15)
-                plt.ylabel('Instrumental Magnitude', fontsize=15)
-                plt.title('TICID: ' + str(tic))
-                plt.ylim([lc.mag.max(), lc.mag.min()])
-                
-                # save the file
-                plt.savefig(Configuration.PLOTS_SECTOR_DIRECTORY + nme)
-                plt.close(fig)
+                    # set the labels
+                    plt.xlabel('JD [days]', fontsize=15)
+                    plt.ylabel('De-trended Instrumental Magnitude', fontsize=15)
+                    plt.title('TICID: ' + str(tic))
+                    plt.ylim([lc.mag.median() + lc.mag.std()*2.5, lc.mag.median() - lc.mag.std()*2.5])
 
-                if (idx > 0) & (idx % 1000):
-                    Utils.log("1000 light curves plotted. " + str(len(detrend_list) - idx - 1) +
+                    # save the file
+                    plt.savefig(Configuration.PLOTS_SECTOR_DIRECTORY + nme)
+                    plt.close(fig)
+
+                if (idx > 0) & (idx % 1000 == 0):
+                    Utils.log("1000 light curves plotted. " + str(len(filtergraph_list) - idx - 1) +
                               " light curves remain.", "info", Configuration.LOG_SCREEN)
 
         return
 
     @staticmethod
-    def get_varstats(detrend_list):
+    def get_varstats(filtergraph_list):
         """ This program will use VARTOOLS to generate the variability statistics for each light curve.
 
-        :parameter detrend_list - The list of stars which have gone through the cleaning process
+        :parameter filtergraph_list - The list of stars which will be posted to filtergraph
 
         :return No value is returned, but the varstats file is output
         """
@@ -197,25 +204,25 @@ class Filtergraph:
         if os.path.exists(Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
                           Configuration.CAMERA + "_" + Configuration.CCD + "_varstats.txt") is False:
 
+            # make the file list
+            nme = [Configuration.RAW_LC_DIRECTORY + str(s) + "_" + Configuration.SECTOR + "_" +
+                   Configuration.CAMERA + "_" + Configuration.CCD + ".lc" for s in filtergraph_list['TICID'].to_list()]
+
+            # dump to a text file for use with vartools
+            pd.DataFrame(nme).to_csv(Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
+                                     Configuration.CAMERA + "_" + Configuration.CCD + "_starlist.txt",
+                                     header=False, sep=" ", index=False)
+
             # get the initial light curve in the grouping to make the dates file
-            lc = pd.read_csv(Configuration.DETREND_LC_DIRECTORY + str(detrend_list['TICID'].iloc[0]) + "_"
-                             + Configuration.SECTOR + "_" + Configuration.CAMERA + "_" + Configuration.CCD + ".lc",
-                             sep=" ", names=['JD', 'mag', 'mag_err'])
+            lc = pd.read_csv(nme[0], sep=" ", names=['JD', 'clean', 'mag', 'mag_err'])
 
             # print out the dates to use later
             lc['JD'].to_csv(Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
                             Configuration.CAMERA + "_" + Configuration.CCD + "_dates.csv", header=False, sep=" ")
 
-            # make the file list
-            nme = [Configuration.DETREND_LC_DIRECTORY + str(s) + "_" + Configuration.SECTOR + "_" +
-                   Configuration.CAMERA + "_" + Configuration.CCD + ".lc" for s in detrend_list['TICID'].to_list()]
-            pd.DataFrame(nme).to_csv(Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
-                                     Configuration.CAMERA + "_" + Configuration.CCD + "_starlist.txt",
-                                     header=False, sep=" ", index=False)
-
             # run VARTOOLS on the files
-            Utils.log("Calculating the variability statistics for sector: " + Configuration.SECTOR + " camera: " +
-                      Configuration.CAMERA + " ccd: " + Configuration.CCD, "info", Configuration.LOG_SCREEN)
+            Utils.log("Calculating the variability statistics for sector: " + Configuration.SECTOR + " Camera: " +
+                      Configuration.CAMERA + " CCD: " + Configuration.CCD, "info", Configuration.LOG_SCREEN)
 
             # send the vartools statement to the command line
             os.system("vartools -header -l " + Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
@@ -224,8 +231,9 @@ class Filtergraph:
                       Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" + Configuration.CAMERA +
                       "_" + Configuration.CCD + "_dates.csv " +
                       "-rmsbin 1 60.0 -LS 0.1 27.0 0.1 1 0 -BLS q 0.01 0.1 0.1 27.0 " +
-                      "2000 200 0 1 0 0 0 > " + Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
-                      Configuration.CAMERA + "_" + Configuration.CCD + "_varstats.txt")
+                      "2000 200 0 1 0 0 0 -inputlcformat t:1,mag:2,err:4 > " +
+                      Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" + Configuration.CAMERA +
+                      "_" + Configuration.CCD + "_varstats.txt")
 
             Utils.log("Variability calculation is complete.", "info", Configuration.LOG_SCREEN)
 

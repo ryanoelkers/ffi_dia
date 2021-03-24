@@ -51,22 +51,17 @@ else:
 
 if Configuration.MAKE_DETREND_LIGHTCURVE_SKIP == 'N':
 
-    # get the stars 'worth' de-trending
-    detrend_list = LightCurves.get_detrend_stars(star_list)
-
     # get the variable statistics for all stars
-    LightCurves.detrend_lightcurves(detrend_list)
+    LightCurves.detrend_lightcurves(star_list)
 else:
     Utils.log("Skipping making de-trended light curves.", "info", Configuration.LOG_SCREEN)
 
 # generate the filtergraph tic / varstats file
-if Configuration.SKIP_MAKE_FILTERGRAPH_PORTAL == 'N':
-
-    # get the stars 'worth' de-trending
-    detrend_list = LightCurves.get_detrend_stars(star_list)
+if Configuration.MAKE_FILTERGRAPH_PORTAL_SKIP == 'N':
 
     # make the filtergraph table
-    Filtergraph.make_filtergraph_table(detrend_list)
+    Filtergraph.make_filtergraph_table(star_list)
+
 else:
     Utils.log("Skipping making the filtergraph portal.", "info", Configuration.LOG_SCREEN)
 
@@ -74,7 +69,7 @@ else:
 if Configuration.MAST_RELEASE_SKIP == 'N':
 
     # generate the .fits files for release
-    MastRelease.make_mast_lc(star_list)
+    MastRelease.make_mast_lc_bulk(star_list)
 else:
     Utils.log("Skipping making MAST release files.", "info", Configuration.LOG_SCREEN)
 Utils.log("All done! See ya later, alligator.", "info", Configuration.LOG_SCREEN)

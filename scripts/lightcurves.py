@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from astropy.io import fits
 from scripts.master import Master
+from scripts.mast_release import MastRelease
 import matplotlib.pyplot as plt
 
 
@@ -181,27 +182,27 @@ class LightCurves:
         return
 
     @staticmethod
-    def get_detrend_stars(master_list):
+    def get_filtergraph_stars(master_list):
         """ This function will determine the list of stars we will want to detrend, primarily based on the expected
         TESSMAG, and the true tessmag.
 
         :parameter master_list - The star list from the master frame
 
-        :return detrend_list - A list of stars to detrend
+        :return filtergraph_list - A list of stars to post to filtergraph
         """
 
         if os.path.exists(Configuration.MASTER_DIRECTORY + Configuration.SECTOR +
-                          "_" + Configuration.CAMERA + "_" + Configuration.CCD + '_detrend_list.csv') == 1:
-            Utils.log("Legacy detrend list found for Sector: " + Configuration.SECTOR +
+                          "_" + Configuration.CAMERA + "_" + Configuration.CCD + '_filtergraph_list.csv') == 1:
+            Utils.log("Legacy filtergraph list found for Sector: " + Configuration.SECTOR +
                       " Camera: " + Configuration.CAMERA + " CCD: " + Configuration.CCD,
                       'info', Configuration.LOG_SCREEN)
 
-            detrend_list = pd.read_csv(Configuration.MASTER_DIRECTORY + Configuration.SECTOR +
-                                       "_" + Configuration.CAMERA + "_" + Configuration.CCD +
-                                       '_detrend_list.csv', index_col=0)
+            filtergraph_list = pd.read_csv(Configuration.MASTER_DIRECTORY + Configuration.SECTOR +
+                                           "_" + Configuration.CAMERA + "_" + Configuration.CCD +
+                                           '_filtergraph_list.csv', index_col=0)
 
         else:
-            Utils.log("Working to get detrend list for Sector: " + Configuration.SECTOR +
+            Utils.log("Working to get the filtergraph list for Sector: " + Configuration.SECTOR +
                       " Camera: " + Configuration.CAMERA + " CCD: " + Configuration.CCD,
                       'info', Configuration.LOG_SCREEN)
 
@@ -224,19 +225,32 @@ class LightCurves:
                                                 zpt) / zpt_std
 
             # remove stars with wild zeropoint offsets
-            detrend_list = stars_cratio[(stars_cratio['mag_offset'] < 2.5)].copy().reset_index(drop=True)
-            detrend_list = detrend_list.sort_values('mag')
+            filtergraph_list = stars_cratio[(stars_cratio['mag_offset'] < 2.5)].copy().reset_index(drop=True)
+            filtergraph_list = filtergraph_list.sort_values('mag').reset_index(drop=True)
 
-            # write out the list of detrend stars
-            detrend_list[['TICID', 'x', 'y', 'mag', 'mag_err', 'tessmag']].to_csv(Configuration.MASTER_DIRECTORY +
-                                                                                  Configuration.SECTOR + "_" +
-                                                                                  Configuration.CAMERA + "_" +
-                                                                                  Configuration.CCD +
-                                                                                  '_detrend_list.csv')
+            # identify stars which slipped through the cracks during photometry
+            index_to_drop = list()
+            for idx, row in filtergraph_list.iterrows():
+                # if the light curve doesn't exist, remove it
+                if os.path.isfile(Configuration.RAW_LC_DIRECTORY + str(int(row['TICID'])) + "_" +
+                                  Configuration.SECTOR + "_" + Configuration.CAMERA + "_" +
+                                  Configuration.CCD + ".lc") is False:
+                    index_to_drop.append(idx)
 
-            Utils.log(str(len(detrend_list)) + " stars found to detrend.", 'info', Configuration.LOG_SCREEN)
+            # drop the non-existent light curves
+            filtergraph_list = filtergraph_list.drop(index=index_to_drop).reset_index(drop=True)
 
-        return detrend_list
+            # write out the list of stars for filtergraph
+            filtergraph_list[['TICID', 'x', 'y', 'mag', 'mag_err', 'tessmag']].to_csv(Configuration.MASTER_DIRECTORY +
+                                                                                      Configuration.SECTOR + "_" +
+                                                                                      Configuration.CAMERA + "_" +
+                                                                                      Configuration.CCD +
+                                                                                      '_filtergraph_list.csv')
+
+            Utils.log(str(len(filtergraph_list)) + " stars found to post to filtergraph.",
+                      'info', Configuration.LOG_SCREEN)
+
+        return filtergraph_list
 
     @staticmethod
     def mk_raw_lightcurves(star_list):
@@ -246,6 +260,7 @@ class LightCurves:
 
         :return nothing is returned, but each light curve is output
         """
+
         # get the file list of the differenced image flux information
         files = Utils.get_file_list(Configuration.DIFFERENCED_DIRECTORY, '-' + Configuration.SECT + '-' +
                                     Configuration.CAMERA + '-' + Configuration.CCD + '-' +
@@ -362,11 +377,12 @@ class LightCurves:
                               str(Configuration.CAMERA) + "_" + str(Configuration.CCD) + ".lc"):
                 os.system('rm -f ' + Configuration.RAW_LC_DIRECTORY + str(ticid) + "_" + str(Configuration.SECTOR) +
                           "_" + str(Configuration.CAMERA) + "_" + str(Configuration.CCD) + ".lc")
+
             # write the new file
             lc[['JD', 'clean', 'mag', 'err']].to_csv(Configuration.RAW_LC_DIRECTORY + str(ticid) + "_" +
                                                      str(Configuration.SECTOR) + "_" +
                                                      str(Configuration.CAMERA) + "_" +
                                                      str(Configuration.CCD) + ".lc",
-                                                     sep=" ", header=False, index=False)
+                                                     sep=" ", header=False, index=False, na_rep='9.999999')
 
         return

@@ -12,7 +12,7 @@ import numpy as np
 class MastRelease:
 
     @staticmethod
-    def make_mast_lc(star_list):
+    def make_mast_lc_bulk(star_list):
         """ This function will convert all of the .lc files in the give directory to the MAST compliant release form.
 
         :parameter star_list - The star list for the current sector CCD combination
@@ -23,7 +23,7 @@ class MastRelease:
         # get the file list of the differenced image flux information
         image_list = Utils.get_file_list(Configuration.DIFFERENCED_DIRECTORY, '-' + Configuration.SECT + '-' +
                                          Configuration.CAMERA + '-' + Configuration.CCD + '-' +
-                                         Configuration.SECT_NUM + '-s_ffic_sd.fits.gz', "N")
+                                         Configuration.SECT_NUM + '-s_ffic_sd.fits')
 
         # get the image headers for the first and the last image
         img1 = fits.getheader(Configuration.DIFFERENCED_DIRECTORY + image_list[0])
@@ -36,45 +36,33 @@ class MastRelease:
         # read in the filtergraph file
         tic_file = pd.read_csv(Configuration.RELEASE_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
                                Configuration.CAMERA + "_" + Configuration.CCD + "_tic7_data.csv",
-                               header=0, delimiter=',')
-        mast_file = pd.read_csv(Configuration.MASTER_DIRECTORY + Configuration.SECTOR + "_" +
-                                Configuration.CAMERA + "_" + Configuration.CCD + "_master.ap",
-                                header=0, delimiter=',')
-        filterg = pd.merge(tic_file, mast_file, left_on='ticid', right_on='TICID', suffixes=['', '_master'])
+                               header=0, delimiter=',', index_col=0)
+
+        filterg = pd.merge(tic_file, star_list, left_on='ticid', right_on='TICID', suffixes=['', '_master'])
 
         for idx, row in filterg.iterrows():
 
-            if os.path.exists(Configuration.DETREND_LC_DIRECTORY + str(row.ticid) + "_" + Configuration.SECTOR + "_" +
+            if os.path.exists(Configuration.RAW_LC_DIRECTORY + str(row.ticid) + "_" + Configuration.SECTOR + "_" +
                               Configuration.CAMERA + "_" + Configuration.CCD + ".lc"):
                 
                 if idx % 1000 == 0:
                     Utils.log(str(idx) + " files written. " + str(len(filterg) - idx) + " files remain.",
                               "info", Configuration.LOG_SCREEN)
 
-                # read in the raw light curve
-                raw_lc = pd.read_csv(Configuration.RAW_LC_DIRECTORY + str(row.ticid) + "_" +
-                                     Configuration.SECTOR + "_" + Configuration.CAMERA + "_" +
-                                     Configuration.CCD + ".lc", sep=" ", names=['JD', 'raw_mag', 'mag_err'])
-                raw_lc.raw_mag.replace('*********', 99.999999, inplace=True)
+                # read in the light curve
+                lc = pd.read_csv(Configuration.RAW_LC_DIRECTORY + str(row.ticid) + "_" +
+                                 Configuration.SECTOR + "_" + Configuration.CAMERA + "_" +
+                                 Configuration.CCD + ".lc", sep=" ", names=['JD', 'cln_mag', 'raw_mag', 'mag_err'])
+                lc.raw_mag.replace('*********', 99.999999, inplace=True)
 
                 # get the flux and the normalized flux
-                raw_lc['raw_flux'] = raw_lc.apply(lambda x: 10. ** (-1 * (float(x.raw_mag) - 25.) / 2.5), axis=1)
-
-                # read in the cleaned light curve
-                cln_lc = pd.read_csv(Configuration.DETREND_LC_DIRECTORY + str(row.ticid) + "_" +
-                                     Configuration.SECTOR + "_" + Configuration.CAMERA + "_" +
-                                     Configuration.CCD + ".lc",
-                                     sep=" ", names=['JD', 'cln_mag', 'cln_mag_err'])
-                cln_lc.cln_mag.replace('*********', 99.999999, inplace=True)
+                lc['raw_flux'] = lc.apply(lambda x: 10. ** (-1 * (float(x.raw_mag) - 25.) / 2.5), axis=1)
 
                 # get the flux and the normalized flux
-                cln_lc['cln_flux'] = cln_lc.apply(lambda x: 10. ** (-1 * (float(x.cln_mag) - 25.) / 2.5), axis=1)
-
-                # merge the two data frames on the time stamps
-                lc = pd.merge(raw_lc, cln_lc, on='JD', how='left')
+                lc['cln_flux'] = lc.apply(lambda x: 10. ** (-1 * (float(x.cln_mag) - 25.) / 2.5), axis=1)
 
                 # get the trend in magnitude
-                lc['trend'] = lc.apply(lambda x: float(x.raw_mag) - float(x.cln_mag), axis=1)
+                lc['zpoint'] = lc.apply(lambda x: float(x.raw_mag) - float(x.cln_mag), axis=1)
 
                 # fill in the null values
                 lc = lc.fillna(-99.99999)
@@ -86,7 +74,7 @@ class MastRelease:
                 c4 = fits.Column(name='cln_mag', array=lc['cln_mag'].astype(float).to_numpy(), format='F')
                 c5 = fits.Column(name='cln_flux', array=lc['cln_flux'].to_numpy(), format='F')
                 c6 = fits.Column(name='mag_err', array=lc['mag_err'].to_numpy(), format='F')
-                c7 = fits.Column(name='trend', array=lc['trend'].to_numpy(), format='F')
+                c7 = fits.Column(name='zpoint', array=lc['zpoint'].to_numpy(), format='F')
 
                 # add the date specific information from the images
                 mjd_beg = np.around(img1['TSTART'] + img1['BJDREFI'] + img1['BJDREFF'] - 2400000.5, decimals=6)
@@ -114,7 +102,7 @@ class MastRelease:
                 hdr.append(('EQUINOX', 2000.0, 'Equinox of observation'))
                 hdr.append(('RA_OBJ', filterg.ra[0], 'Right Ascension of object in degrees'))
                 hdr.append(('DEC_OBJ', filterg.dec[0], 'Declination of object in degrees'))
-                hdr.append(('DETREND', 'YES', 'Was the light curve detrended'))
+                hdr.append(('ZPOINT', 'YES', 'Was the zeropoint applied'))
                 hdr.append(('TICVER', 'v7', 'TIC version of parameters'))
                 hdr.append(('X_Pixel', filterg['x'][0], 'X pixel of star centroid'))
                 hdr.append(('Y_Pixel', filterg['y'][0], 'Y pixel of star centroid'))
@@ -136,10 +124,10 @@ class MastRelease:
                 hdr.append(('TDESC1', 'BTJD', 'The mean BTJD time of exposure, in days.'))
                 hdr.append(('TDESC2', 'raw_mag', 'Raw instrumental magnitude'))
                 hdr.append(('TDESC3', 'raw_flux', 'Raw instrumental flux'))
-                hdr.append(('TDESC4', 'cln_mag', 'Detrended instrumental magnitude'))
-                hdr.append(('TDESC5', 'cln_flux', 'Detrended instrumental flux'))
+                hdr.append(('TDESC4', 'cln_mag', 'Zeropointed instrumental magnitude'))
+                hdr.append(('TDESC5', 'cln_flux', 'Zeropointed instrumental flux'))
                 hdr.append(('TDESC6', 'mag_err', 'Photometric error in magnitude'))
-                hdr.append(('TDESC7', 'trend', 'Photometric trend in magnitude'))
+                hdr.append(('TDESC7', 'zpoint', 'Zeropoint offset in magnitude'))
 
                 # create the FITS file binary table, then write out the light curve
                 lc_table = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7], header=hdr)
