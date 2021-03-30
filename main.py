@@ -8,7 +8,7 @@ from libraries.utils import Utils
 from config import Configuration
 import pandas as pd
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('Agg')
 
 # do necessary prep work
 Utils.create_directories(Configuration.DIRECTORIES)
