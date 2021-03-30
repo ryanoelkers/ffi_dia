@@ -231,9 +231,18 @@ class Filtergraph:
                       Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" + Configuration.CAMERA +
                       "_" + Configuration.CCD + "_dates.csv " +
                       "-rmsbin 1 60.0 -LS 0.1 27.0 0.1 1 0 -BLS q 0.01 0.1 0.1 27.0 " +
-                      "2000 200 0 1 0 0 0 -inputlcformat t:1,mag:2,err:4 > " +
+                      "2000 200 0 1 0 0 0 -readformat 0 1 2 4 > " +
                       Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" + Configuration.CAMERA +
                       "_" + Configuration.CCD + "_varstats.txt")
+#            os.system("vartools -header -l " + Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" +
+#                      Configuration.CAMERA + "_" + Configuration.CCD + "_starlist.txt " +
+#                      "-clip 2.5 1 -rms -Jstet 0.0208333 " +
+#                      Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" + Configuration.CAMERA +
+#                      "_" + Configuration.CCD + "_dates.csv " +
+#                      "-rmsbin 1 60.0 -LS 0.1 27.0 0.1 1 0 -BLS q 0.01 0.1 0.1 27.0 " +
+#                      "2000 200 0 1 0 0 0 -inputlcformat t:1,mag:2,err:4 > " +
+#                      Configuration.VARSTATS_SECTOR_DIRECTORY + Configuration.SECTOR + "_" + Configuration.CAMERA +
+#                      "_" + Configuration.CCD + "_varstats.txt")
 
             Utils.log("Variability calculation is complete.", "info", Configuration.LOG_SCREEN)
 
