@@ -71,15 +71,23 @@ class Filtergraph:
                           Configuration.CAMERA + "_" + Configuration.CCD + "_tic7_data.csv", delimiter=',', index_col=0)
 
         # combine with filtergraph_list
-        full_tmp = pd.merge(filtergraph_list, tic, left_on='TICID', right_on='ticid')
-        full = pd.merge(full_tmp, varstats, on='ticid')
-        full = full.drop(columns=['#Name', 'pk', 'ticlinkpk', 'ticid', 'twomass_extkey',
-                                  'sdss_extkey', 'kic', 'rpmjdwarf', 'tmpk'])
+        if Configuration.WHERE_TO_QUERY =='local':
+            full_tmp = pd.merge(filtergraph_list, tic, left_on='TICID', right_on='ticid')
+            full = pd.merge(full_tmp, varstats, on='ticid')
+            full = full.drop(columns=['#Name', 'pk', 'ticlinkpk', 'ticid', 'twomass_extkey',
+                                      'sdss_extkey', 'kic', 'rpmjdwarf', 'tmpk'])
 
-        # rename columns
-        full = full.rename(columns={'TICID': 'TIC_ID', 'x': 'X_Pixel', 'y': 'Y_Pixel', 'mag': 'Inst_Mag',
-                                    'mag_err': 'APER_Error', 'tessmag': "TESS_MAG"})
+            # rename columns
+            full = full.rename(columns={'TICID': 'TIC_ID', 'x': 'X_Pixel', 'y': 'Y_Pixel', 'mag': 'Inst_Mag',
+                                        'mag_err': 'APER_Error', 'tessmag': "TESS_MAG"})
+        else:
+            full_tmp = pd.merge(filtergraph_list, tic, left_on='TICID', right_on='ID')
+            full = pd.merge(full_tmp, varstats, left_on='TICID', right_on='ticid')
+            full = full.drop(columns=['#Name', 'ID', 'ticid'])
 
+            # rename columns
+            full = full.rename(columns={'TICID': 'TIC_ID', 'x': 'X_Pixel', 'y': 'Y_Pixel', 'mag': 'Inst_Mag',
+                                        'mag_err': 'APER_Error', 'tessmag': "TESS_MAG"})
         # re-order columns
         cols = list(full)
         cols.insert(1, cols.pop(cols.index('Lightcurve')))
