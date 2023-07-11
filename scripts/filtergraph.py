@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import logging
 import numpy as np
 logging.getLogger('matplotlib.font_manager').disabled = True
+from astroquery.mast import Catalogs
 
 
 class Filtergraph:
@@ -123,11 +124,17 @@ class Filtergraph:
                 # pull the specific TICIDs to query
                 tics = filtergraph_list['TICID'].iloc[idx:idy].astype(str).tolist()
 
-                # create the correct SQL command
-                sql_cmd = DBaccess.get_ticid_query(Configuration.QUERIES_DIRECTORY + 'filtergraph.sql', tics)
+                if Configuration.WHERE_TO_QUERY == 'local':
+                    # create the correct SQL command
+                    sql_cmd = DBaccess.get_ticid_query(Configuration.QUERIES_DIRECTORY + 'filtergraph.sql', tics)
 
-                # now query the TIC at this given distance and center coordinate position
-                df_query = DBaccess.query_tic7_bulk(sql_cmd, Configuration.MACHINE)
+                    # now query the TIC at this given distance and center coordinate position
+                    df_query = DBaccess.query_tic7_bulk(sql_cmd, Configuration.MACHINE)
+                else:
+
+                    # now query MAST in bulks of 1000
+                    df_query = Catalogs.query_criteria(catalog="Tic", ID=tics).to_pandas().dropna(subset=['TWOMASS'])
+                    df_query = df_query.drop(columns=df_query.columns[list(df_query.columns).index("priority") + 1:])
 
                 # either make a new data frame or append depending on the index
                 if idx == 0:
