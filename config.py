@@ -8,15 +8,16 @@ class Configuration:
 
     # Computer for reduction
     MACHINE = 'tessdev'
-    BULK_QUERY = 1000
+    BULK_QUERY = 25000  # 1000 for tessdb probably closer to 25,000 for MAST
+    WHERE_TO_QUERY = 'MAST'
 
     # Sector, Camera, CCD information
-    SECTOR = 'sector01'
-    SECTOR_NUMBER = '0001'
-    CAMERA = '1'
-    CCD = '1'
-    SECT = 's0001'
-    SECT_NUM = '0120'
+    SECTOR = 'sector12'
+    SECTOR_NUMBER = '0012'
+    CAMERA = '4'
+    CCD = '4'
+    SECT = 's0012'  # 's0011' # 's0010'
+    SECT_NUM = '0144'  # '0143'  # '0140'
 
     # logging information, i.e. print to the screen?
     LOG_SCREEN = 'Y'
@@ -28,10 +29,10 @@ class Configuration:
     ALIGNMENT = 'N'
 
     # which reduction step would you like to start at?
-    CLEAN_SKIP = 'Y'
-    MASTER_SKIP = 'Y'
-    DIFFERENCE_SKIP = 'Y'
-    PHOTOMETRY_SKIP = 'Y'
+    CLEAN_SKIP = 'N'
+    MASTER_SKIP = 'N'
+    DIFFERENCE_SKIP = 'N'
+    PHOTOMETRY_SKIP = 'N'
     MAKE_RAW_LIGHTCURVE_SKIP = 'N'
     MAKE_DETREND_LIGHTCURVE_SKIP = 'Y'
     MAKE_FILTERGRAPH_PORTAL_SKIP = 'N'
@@ -78,8 +79,8 @@ class Configuration:
     RMS_UP_LIMIT = 0.02  # the upper limit on precision to use for the kernel stars
 
     # output paths for logging, temporary files, figures etc
-    WORKING_DIRECTORY = '/home/oelkerrj/Development/FFI/'
-    DATA_DIRECTORY = '/media/oelkerrj/Yavin/TESS/data/'
+    WORKING_DIRECTORY = '/home/oelkerrj/Development/ffi_dia/'
+    DATA_DIRECTORY = '/net/tessffi2/export/tessffi2/oelkerrj/data/'
     ANALYSIS_DIRECTORY = WORKING_DIRECTORY + 'analysis/'
     LEGACY_DIRECTORY = WORKING_DIRECTORY + 'legacy/'
     LIBRARY_DIRECTORY = WORKING_DIRECTORY + 'libraries/'
