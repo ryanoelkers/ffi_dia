@@ -67,17 +67,17 @@ class DBaccess:
         """
         # set up the connection object based on whether you are on tessdev
         if stassunlab != 'tessdev':
-            conn = psycopg2.connect(host="10.2.188.37", # host="129.59.141.168",
-                                    port=5432,
-                                    database="tessdb",
-                                    user="tessuser",
-                                    password="4-users")
+            conn = psycopg2.connect(host=,
+                                    port=,
+                                    database=,
+                                    user=,
+                                    password=)
         if stassunlab == 'tessdev':
-            conn = psycopg2.connect(host="10.2.188.37", # host="129.59.141.168",
-                                    port=5432,
-                                    database="tessdb",
-                                    user="tessuser",
-                                    password="4-users")
+            conn = psycopg2.connect(host=,
+                                    port=,
+                                    database=,
+                                    user=,
+                                    password=)
         # set up the cursor object
         cur = conn.cursor()
 
@@ -109,17 +109,17 @@ class DBaccess:
         """
         # set up the connection object based on whether you are on tessdev
         if stassunlab != 'tessdev':
-            conn = psycopg2.connect(host="10.2.188.37",  #129.59.141.168",
-                                    port=5432,
-                                    database="tessdb",
-                                    user="tessuser",
-                                    password="4-users")
+            conn = psycopg2.connect(host=,
+                                    port=,
+                                    database=,
+                                    user=,
+                                    password=)
         if stassunlab == 'tessdev':
-            conn = psycopg2.connect(host="10.2.188.37",
-                                    port=5432,
-                                    database="tessdb",
-                                    user="tessuser",
-                                    password="4-users")
+            conn = psycopg2.connect(host=,
+                                    port=,
+                                    database=,
+                                    user=,
+                                    password=)
         # set up the cursor object
         cur = conn.cursor()
 
